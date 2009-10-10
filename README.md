@@ -63,11 +63,11 @@ There are a number of options which can be given to film_search as arguments
 -  `--update`     Updates the database with films from the next 7 days
 -  `--delete-old` Deletes films which have already happened
 -  `--print-hash` Prints the whole hash that is returned from the database (i.e. 
-                  does 'SELECT * FROM films.db')
+  does 'SELECT * FROM films.db')
 -  `--no-output`  Don't print any output. This is sometimes useful to avoid 
-                  cluttering up the screen - particularly when updating
+  cluttering up the screen - particularly when updating
 -  `--org-mode`   Output text which is suitable for emacs org-mode - provides 
-                  links to IMDB for each of the films
+  links to IMDB for each of the films
 -  `--wipe`       Delete the database and create a fresh one
 
 ### imdb.rb ###
