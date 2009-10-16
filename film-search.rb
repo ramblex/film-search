@@ -28,7 +28,6 @@ require 'active_support'
              ["Five USA", 2008],
             ]
 
-Dir.chdir("/Users/alexduller/film_search/")
 @db = SQLite3::Database.new("films.db")
 
 # Helper method that deletes the current Films table and creates a new one
