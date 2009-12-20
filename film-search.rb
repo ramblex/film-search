@@ -87,6 +87,30 @@ def get_channel(channel_name, channel_num)
   end
 end
 
+def display_help()
+  puts "USAGE: ruby film-search.rb [OPTIONS] [CONDITIONS]"
+  puts "OPTIONS:"
+  puts " --help       Display this message"
+  puts " --update     Update the database with films"
+  puts " --wipe       Delete the films table and create a new one"
+  puts " --print-hash Print a hash"
+  puts " --no-output  Don't display any output"
+  puts " --delete-old Delete films from the DB that have already finished"
+  puts " --org-mode   Output suitable for use in org-mode"
+  puts " --short      Don't show the description of each film"
+  puts "CONDITIONS:"
+  puts " - This can be anything which normally goes in the WHERE conditions of an SQL"
+  puts "   query. e.g. \"date = '12/12/2009'\"."
+  puts " - There are also a couple of shortcuts:"
+  puts "   today      Shows todays films in reverse order"
+  puts "   tomorrow   Shows tomorrows films in reverse order"
+  puts "EXAMPLES:"
+  puts "1. ruby film-search.rb today"
+  puts "   Shows films that are on today"
+  puts "2. ruby film-search.rb \"date = '12/12/2009' AND year > 2000\""
+  puts "   Shows films that were released after 2000 being shown on 12th December 2009"
+end
+
 # Whether to update the database. If this option is turned on, it can take
 # a few minutes to grab and process all of the data
 @update = false
@@ -111,7 +135,10 @@ end
 
 # Process input args
 ARGV.each do |arg|
-  if arg.eql? "--update"
+  if arg.eql? "--help"
+    display_help
+    exit
+  elsif arg.eql? "--update"
     @update = true
   elsif arg.eql? "--wipe"
     @clean = true
