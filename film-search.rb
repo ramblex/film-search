@@ -165,9 +165,8 @@ unless @conds.eql? ""
   unless @conds.upcase.include? "ORDER BY"
     @conds += " ORDER BY date DESC,start_time DESC"
   end
+  puts "conds: #{@conds}"
 end
-
-puts "conds: #{@conds}"
 
 begin
   @db.execute("SELECT * FROM Films #{@conds}") do |row|
