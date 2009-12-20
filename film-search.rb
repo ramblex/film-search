@@ -26,6 +26,7 @@ require 'active_support'
              ["Film4", 160],
              ["Five", 134],
              ["Five USA", 2008],
+             ["Fiver", 2062],
             ]
 
 @db = SQLite3::Database.new("films.db")
@@ -40,21 +41,34 @@ CREATE TABLE films (
   date DATETIME,
   channel VARCHAR(200),
   start_time TIME,
+  end_time TIME,
   year NUMBER,
   description TEXT,
+  duration NUMBER,
   PRIMARY KEY(title, date, channel)
 );
 EOF
               )
 end
 
+def wordwrap(txt, col = 80)
+  txt.gsub(/(.{1,#{col}})( +|$\n?)|(.{1,#{col}})/,
+    "\\1\\3\n") 
+end
+
+class String
+  def escape_single_quotes
+    self.gsub(/'/, "\\\\'")
+  end
+end
+
 # Insert a film into the database table
-def insert_film(title, date, channel, start_time, year, desc)
+def insert_film(title, date, channel, start_time, end_time, year, desc, duration)
   title = title.gsub(/[']/, "\\'")
   desc = desc.gsub(/[']/, "")
   @db.execute("INSERT OR IGNORE INTO Films \
-VALUES ('#{title}', '#{date}', '#{channel}', \
-'#{start_time}', '#{year}', '#{desc}')")
+VALUES ('#{title.escape_single_quotes}', '#{date}', '#{channel}', \
+'#{start_time}', '#{end_time}', '#{year}', '#{desc.escape_single_quotes}', #{duration})")
 end
 
 # Retrieve the listings for a channel
@@ -68,7 +82,7 @@ def get_channel(channel_name, channel_num)
   res.body.split("\n").each do |line|
     line = line.chomp.split("~")
     if line[16].eql? "Film"
-      insert_film(line[0], line[19], channel_name, line[20], line[3], line[17])
+      insert_film(line[0], line[19], channel_name, line[20], line[21], line[3], line[17], line[22])
     end
   end
 end
@@ -109,6 +123,8 @@ ARGV.each do |arg|
     @delete_old = true
   elsif arg.eql? "--org-mode"
     @org_mode = true
+  elsif arg.eql? "--short"
+    @short = true
   else
     @conds = arg
   end
@@ -138,7 +154,7 @@ end
 # user.
 @conds = @conds.gsub(/today/, 
                      "(date = '#{Date.today.strftime("%d/%m/%Y")}' 
-and start_time >= '#{Time.now.strftime("%H:%M")}')
+and end_time >= '#{(Time.now).strftime("%H:%M")}')
 or (date = '#{Date.tomorrow.strftime("%d/%m/%Y")}' and start_time <= '03:00')")
 @conds = @conds.gsub(/tomorrow/, "date = '#{Date.tomorrow.strftime("%d/%m/%Y")}'")
 
@@ -147,7 +163,7 @@ or (date = '#{Date.tomorrow.strftime("%d/%m/%Y")}' and start_time <= '03:00')")
 unless @conds.eql? ""
   @conds = "WHERE #{@conds}"
   unless @conds.upcase.include? "ORDER BY"
-    @conds += " ORDER BY date,start_time"
+    @conds += " ORDER BY date DESC,start_time DESC"
   end
 end
 
@@ -155,10 +171,12 @@ puts "conds: #{@conds}"
 
 begin
   @db.execute("SELECT * FROM Films #{@conds}") do |row|
-    if @org_mode
-      puts "#{row['date']} #{row['start_time']} [[http://www.google.com/search?hl=en&q=imdb+#{CGI::escape(row['title'])}+#{row['year']}&btnI=I%27m+Feeling+Lucky][#{row['title']}]] (#{row['year']}) #{row['channel']}"
-    elsif @readable
-      puts "#{row['date']} #{row['start_time']} #{row['title']} (#{row['year']}) #{row['channel']}"
+    if @readable
+      puts "---"
+      puts "#{row['date']} #{row['start_time']}-#{row['end_time']} #{row['title']} (#{row['year']}) #{row['channel']} (#{row['duration']} mins)"
+      unless @short
+        puts wordwrap(row['description'], 80)
+      end
     else
       puts row
     end
